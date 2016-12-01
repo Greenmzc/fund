@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>fund</title>
+	<style>
+		div {
+			margin-top: 10px;
+		}
+		div span {
+			color: #f00;
+		}
+		button {
+			margin: 10px 5px;
+		}
+	</style>
+	<script src="http://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+	<script src="https://cdn.bootcss.com/d3/4.4.0/d3.min.js"></script>
+</head>
+<body>
+	<p>请输入最近一个月的净值</p>
+	<div class="input-area"></div>
+	<button id="calc">计算</button>
+	<button id="add">增加</button>
+	<button id="reduce">减少</button>
+	<div class="average">平均值：<span></span></div>
+	<div class="min">最小值：<span></span></div>
+	<div class="max">最大值：<span></span></div>
+	<div class="last-data">月末净值：<span></span></div>
+	<div class="direct">此基目前为<span></span>基</div>
+	<div class="new-min">估算的最低净值：<span></span></div>
+	<div class="new-max">估算的最高净值：<span></span></div>
+	<div class="low-ave">低均值：<span></span></div>
+	<div class="high-ave">高均值：<span></span></div>
+	<div class="up-val">涨幅值：<span></span></div>
+	<div class="down-val">跌幅值：<span></span></div>
+	<div class="wave-val">波动值：<span></span></div>
+	<div class="safe-min">安全区间最低值：<span></span></div>
+	<div class="safe-max">安全区间最高值：<span></span></div>
+	<div class="safe-buy">安全区间买卖价：<span></span></div>
+	<div class="gain-wave">盈利波动：<span></span></div>
+	<div class="max-gain">最大盈利净值：<span></span></div>
+	<div class="max-loss">最大亏损净值：<span></span></div>
+	<script>
+		for(var i = 0; i < 22; i++) {
+			d3.select('.input-area')
+				.append('input')
+				.attr('type', 'text')
+				.attr('class', 'worth')
+		}
+
+		$('#add').click(function(){
+			d3.select('.input-area')
+				.append('input')
+				.attr('type', 'text')
+				.attr('class', 'worth')
+		})
+
+		$('#reduce').click(function(){
+			$('.worth:last').remove()
+		})
+
+		var dataset = []
+
+		$('#calc').click(function(){
+			$('.worth').each(function(i, dom){
+				dataset.push(Number(dom.value))
+			})
+
+			var dataLen = dataset.length
+
+			var exitFlag = false
+
+			dataset.forEach(function(item) {
+				if(item === 0) {
+					exitFlag = true
+				}
+			})
+
+			if(exitFlag) {
+				alert('请输入完全，且不能为零！')
+				dataset = []
+				return false
+			}
+
+			var average = d3.mean(dataset) // 平均值
+			var min = d3.min(dataset) // 最小值
+			var max = d3.max(dataset) // 最大值
+			var lastData = dataset[dataLen-1] // 月末净值
+			var direct = ''
+			var newMin // 估算的最低净值
+			var newMax // 估算的最高净值
+
+			if(lastData >= average){
+				direct = '上行'
+				newMax = max * 1.02
+				newMin = min
+			} else {
+				direct = '下行'
+				newMax = max
+				newMin = min * 0.98
+			}
+
+			var highData = []
+			var lowData = []
+
+			dataset.forEach(function(val){
+				if(val >= average){
+					highData.push(val)
+				} else {
+					lowData.push(val)
+				}
+			})
+
+			var lowAve = d3.mean(lowData) // 高均值
+			var highAve = d3.mean(highData) // 低均值
+
+			var upVal = highAve - average // 涨幅值
+			var downVal = average - lowAve // 跌幅值
+			var waveVal = upVal + downVal // 波动值
+
+			var safeMin = newMin - waveVal // 安全区间最低值
+			var safeMax = newMax - waveVal // 安全区间最高值
+			var safeBuy = average - waveVal // 安全区间买卖价
+			var gainWave = waveVal/safeBuy // 盈利波动
+			var maxGain = safeBuy * (1 + gainWave) // 最大盈利净值
+			var maxLoss = safeBuy * (1 - gainWave) // 最大亏损净值
+
+			$('.average span').text(average.toFixed(4))
+			$('.min span').text(min.toFixed(4))
+			$('.max span').text(max.toFixed(4))
+			$('.last-data span').text(lastData.toFixed(4))
+			$('.direct span').text(direct)
+			$('.new-min span').text(newMin.toFixed(4))
+			$('.new-max span').text(newMax.toFixed(4))
+			$('.low-ave span').text(lowAve.toFixed(4))
+			$('.high-ave span').text(highAve.toFixed(4))
+			$('.up-val span').text(upVal.toFixed(4))
+			$('.down-val span').text(downVal.toFixed(4))
+			$('.wave-val span').text(waveVal.toFixed(4))
+			$('.safe-min span').text(safeMin.toFixed(4))
+			$('.safe-max span').text(safeMax.toFixed(4))
+			$('.safe-buy span').text(safeBuy.toFixed(4))
+			$('.gain-wave span').text(gainWave.toFixed(4))
+			$('.max-gain span').text(maxGain.toFixed(4))
+			$('.max-loss span').text(maxLoss.toFixed(4))
+
+			dataset = []
+		})
+	</script>
+</body>
+</html>
